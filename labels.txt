@@ -1,0 +1,2 @@
+0 Critical
+1 Good
