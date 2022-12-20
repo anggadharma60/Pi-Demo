@@ -4,6 +4,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from helper import *
 from led import *
+import pygame
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
@@ -14,12 +15,15 @@ model2 = data_folder + "MobileNetV2_V2_edgetpu.tflite"
 # model1 = data_folder + "model.tflite"
 # model2 = data_folder + "model_edgetpu.tflite"
 list_model=[model1, model2]
+critical_sound = 'templates/critical.mp3'
+good_sound = 'templates/good.mp3'
+list_sound = [critical_sound, good_sound]
 interpreter = load_interpreter(list_model)
 
 imgSize=224
 camfps=30
 videostream = WebcamVideoStream(src=0, res=(480, 360), fps=camfps, api=cv2.CAP_V4L).start()
-time.sleep(1.0)
+# time.sleep(1.0)
 
 @app.get('/', response_class=HTMLResponse)
 async def index(request: Request):
@@ -45,7 +49,16 @@ def gen(videostream):
         
         Prediction = classify(interpreter, input_data)
     
-#         print(Prediction, text, "%.4fs" % time_diff)
+        if int(Prediction) == 1 :
+            text="Good"
+            sound=list_sound[int(Prediction)]
+            pygame.mixer.init()
+            pygame.mixer.music.load(sound)
+        else:
+            text="Critical"
+            sound=list_sound[int(Prediction)]
+            pygame.mixer.init()
+            pygame.mixer.music.load(sound)
         
         cv2.putText(frame,"FPS Video: "+fps_video_text,(5,25), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 1)
         cv2.putText(frame,"FPS Processing: "+fps_process_text,(5,50), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 1)
@@ -56,10 +69,6 @@ def gen(videostream):
         total_video+=1/time_diff
         numFrame+=1
 
-        if int(Prediction) == 1 :
-            text="Good"
-        else:
-            text="Critical"
         if numFrame == camfps :
             fps_process =  numFrame / total_process
             fps_process_text = "{:.1f}".format(fps_process)
@@ -68,16 +77,15 @@ def gen(videostream):
             total_video=0
             numFrame=0
             total_process=0
-        show_led(Prediction)    
-        
         
         ret , jpg = cv2.imencode('.jpg', frame)
         jpg = jpg.tobytes()
-        hide_led()
+
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpg + b'\r\n\r\n')
-    videostream.stop()
-    poweroff_led()
+        show_led(Prediction)
+        pygame.mixer.music.play()
+        hide_led()
 
 @app.get('/video_feed', response_class=HTMLResponse)
 async def video_feed():
@@ -85,4 +93,9 @@ async def video_feed():
                     media_type='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    try:
+        uvicorn.run(app, host='0.0.0.0', port=8000)
+    except  Exception:
+        videostream.stop()
+        poweroff_led()
+        sys.exit(0)
