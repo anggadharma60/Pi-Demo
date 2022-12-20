@@ -1,12 +1,9 @@
-import uvicorn
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.templating import Jinja2Templates
+from flask import Flask, Response, render_template, request, send_file
 from helper import *
 from led import *
+from cv_grab2 import *
 
-app = FastAPI()
-templates = Jinja2Templates(directory="templates")
+app = Flask(__name__)
  
 data_folder = "models/"
 model1 = data_folder + "MobileNetV2_V2.tflite"
@@ -18,14 +15,27 @@ interpreter = load_interpreter(list_model)
 
 imgSize=224
 camfps=30
-videostream = WebcamVideoStream(src=0, res=(480, 360), fps=camfps, api=cv2.CAP_V4L).start()
-time.sleep(1.0)
+DevList = mvsdk.CameraEnumerateDevice()
+nDev = len(DevList)
+if nDev < 1:
+    print("No camera was found!")
 
-@app.get('/', response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse('index.html', {"request": request})
+for i, DevInfo in enumerate(DevList):
+    print("{}: {} {}".format(i, DevInfo.GetFriendlyName(), DevInfo.GetPortType()))
+i = 0 if nDev == 1 else int(input("Select camera: "))
+DevInfo = DevList[i]
 
-def gen(videostream):
+cam = Camera(DevInfo)
+cam.open()
+
+# time.sleep(1.0)
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+def gen(cam):
     fps_video=0
     total_video=0
     fps_video_text="0.0"
@@ -38,7 +48,7 @@ def gen(videostream):
     color_id=0
     while True:
         fps_start_time =time.perf_counter()
-        _,frame = videostream.read()
+        frame = cam.grab()
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_resized = cv2.resize(frame_rgb, (imgSize, imgSize))
         input_data = np.expand_dims(frame_resized, axis=0)
@@ -68,21 +78,20 @@ def gen(videostream):
             total_video=0
             numFrame=0
             total_process=0
-        show_led(Prediction)    
-        
+        show_led(Prediction)
         
         ret , jpg = cv2.imencode('.jpg', frame)
         jpg = jpg.tobytes()
         hide_led()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpg + b'\r\n\r\n')
-    videostream.stop()
+    cam.close()
     poweroff_led()
-
-@app.get('/video_feed', response_class=HTMLResponse)
-async def video_feed():
-    return StreamingResponse(gen(videostream),
-                    media_type='multipart/x-mixed-replace; boundary=frame')
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen(cam),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    app.run(host='0.0.0.0', debug=False)
+    

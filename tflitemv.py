@@ -45,7 +45,7 @@ def main():
     model1 = data_folder + "MobileNetV2_V2.tflite"
     model2 = data_folder + "MobileNetV2_V2_edgetpu.tflite"
 #     interpreter = Interpreter(model_path=model2,num_threads=4)
-    interpreter = Interpreter(model_path=model2, num_threads=4, experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
+    interpreter = Interpreter(model_path=model1, num_threads=4, experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
     interpreter.allocate_tensors()
 
     input_details = interpreter.get_input_details()
