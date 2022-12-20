@@ -24,4 +24,3 @@ def hide_led():
 def poweroff_led():
     device.cleanup()
     
-show_led(5)

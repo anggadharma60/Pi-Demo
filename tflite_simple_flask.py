@@ -1,6 +1,5 @@
 from flask import Flask, Response, render_template, request, send_file
 from helper import *
-from gevent.pywsgi import WSGIServer
 from led import *
 
 app = Flask(__name__)
@@ -73,15 +72,12 @@ def gen(videostream):
         hide_led()
         yield (b'--frame\r\n'
                b'Content-Type: image/jpeg\r\n\r\n' + jpg + b'\r\n\r\n')
-
+    videostream.stop()
+    poweroff_led()
 @app.route('/video_feed')
 def video_feed():
     return Response(gen(videostream),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-#     app.run(host='0.0.0.0', debug=False)
-    http_server = WSGIServer(('', 5000), app)
-    http_server.serve_forever()
-    videostream.stop()
-    poweroff_led()
+    app.run(host='0.0.0.0', debug=False)
