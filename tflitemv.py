@@ -45,7 +45,7 @@ def main():
     model1 = data_folder + "MobileNetV2_V2.tflite"
     model2 = data_folder + "MobileNetV2_V2_edgetpu.tflite"
 #     interpreter = Interpreter(model_path=model2,num_threads=4)
-    interpreter = Interpreter(model_path=model1, num_threads=4, experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
+    interpreter = Interpreter(model_path=model2, num_threads=4, experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
     interpreter.allocate_tensors()
 
     input_details = interpreter.get_input_details()
@@ -72,12 +72,13 @@ def main():
     DevInfo = DevList[i]
     print(DevInfo)
     hCamera = 0
+    
     try:
         hCamera = mvsdk.CameraInit(DevInfo, -1, -1)
     except mvsdk.CameraException as e:
         print("CameraInit Failed({}): {}".format(e.error_code, e.message) )
         return
-#     
+    
     cap = mvsdk.CameraGetCapability(hCamera)
     monoCamera = (cap.sIspCapacity.bMonoSensor != 0)
     if monoCamera:
@@ -89,8 +90,18 @@ def main():
     mvsdk.CameraSetAeState(hCamera, 0)
     mvsdk.CameraSetExposureTime(hCamera, 30 * 1000)
  
-    mvsdk.CameraSetFrameSpeed(hCamera, 0)
-
+    mvsdk.CameraSetFrameSpeed(hCamera, 2)
+    
+    sRoiReslution = mvsdk.tSdkImageResolution()
+    sRoiReslution.iIndex=0xff
+    sRoiReslution.iWidth=640
+    sRoiReslution.iWeightFOV=640
+    sRoiReslution.iHeight=480
+    sRoiReslution.iHeightFOV=480
+    mvsdk.CameraSetImageResolution(hCamera, sRoiReslution)
+#     
+#     print(mvsdk.CameraGetImageResolution(hCamera))  
+# 
 
     mvsdk.CameraPlay(hCamera)
     FrameBufferSize = cap.sResolutionRange.iWidthMax * cap.sResolutionRange.iHeightMax * (1 if monoCamera else 3)

@@ -42,6 +42,14 @@ class Camera(object):
         # 手动曝光，曝光时间30ms
         mvsdk.CameraSetAeState(hCamera, 0)
         mvsdk.CameraSetExposureTime(hCamera, 30 * 1000)
+        
+        sRoiReslution = mvsdk.tSdkImageResolution()
+        sRoiReslution.iIndex=0xff
+        sRoiReslution.iWidth=640
+        sRoiReslution.iWeightFOV=640
+        sRoiReslution.iHeight=480
+        sRoiReslution.iHeightFOV=480
+        mvsdk.CameraSetImageResolution(hCamera, sRoiReslution)
 
         # 让SDK内部取图线程开始工作
         mvsdk.CameraPlay(hCamera)
@@ -85,7 +93,7 @@ class Camera(object):
             frame_data = (mvsdk.c_ubyte * FrameHead.uBytes).from_address(pFrameBuffer)
             frame = np.frombuffer(frame_data, dtype=np.uint8)
             frame = frame.reshape((FrameHead.iHeight, FrameHead.iWidth, 1 if FrameHead.uiMediaType == mvsdk.CAMERA_MEDIA_TYPE_MONO8 else 3) )
-            frame = cv2.resize(frame, (480, 320))
+#             frame = cv2.resize(frame, (480, 320))
             return frame
         except mvsdk.CameraException as e:
             if e.error_code != mvsdk.CAMERA_STATUS_TIME_OUT:
