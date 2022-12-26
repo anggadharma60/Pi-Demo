@@ -3,25 +3,14 @@ from helper import *
 from led import *
 import pygame
 import sys
+from setting import *
+
 
 app = Flask(__name__)
  
-data_folder = "models/"
-model1 = data_folder + "MobileNetV2_V2.tflite"
-model2 = data_folder + "MobileNetV2_V2_edgetpu.tflite"
-# model1 = data_folder + "model.tflite"
-# model2 = data_folder + "model_edgetpu.tflite"
-list_model=[model1, model2]
-critical_sound = 'templates/critical.mp3'
-good_sound = 'templates/good.mp3'
-list_sound = [critical_sound, good_sound]
 interpreter = load_interpreter(list_model)
-
-imgSize=224
 camfps=30
-videostream = WebcamVideoStream(src=0, res=(480, 360), fps=camfps, api=cv2.CAP_V4L).start()
-# time.sleep(1.0)
-
+videostream = WebcamVideoStream(src=0, res=(640, 480), fps=camfps, api=cv2.CAP_V4L).start()
 
 @app.route('/')
 def index():

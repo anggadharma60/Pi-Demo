@@ -19,7 +19,7 @@ def show_led(cl):
 def hide_led():
     with canvas(device) as draw:
         text(draw, (0, 0), "", fill="white")
-#     time.sleep(1/1000)
+    time.sleep(1/1000)
     
 def poweroff_led():
     device.cleanup()
