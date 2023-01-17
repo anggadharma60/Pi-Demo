@@ -6,6 +6,8 @@ from helper import *
 from led import *
 from cv_grab2 import *
 import pygame
+from setting import *
+
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
