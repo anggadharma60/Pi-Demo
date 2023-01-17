@@ -41,9 +41,9 @@ def classify(interpreter, image):
 
 def main():
     
-    data_folder = "models/"
-    model1 = data_folder + "MobileNetV2_V2.tflite"
-    model2 = data_folder + "MobileNetV2_V2_edgetpu.tflite"
+    data_folder = "models/tm/aug/"
+    model1 = data_folder + "model.tflite"
+    model2 = data_folder + "model_edgetpu.tflite"
 #     interpreter = Interpreter(model_path=model2,num_threads=4)
     interpreter = Interpreter(model_path=model2, num_threads=4, experimental_delegates=[load_delegate('libedgetpu.so.1.0')])
     interpreter.allocate_tensors()
