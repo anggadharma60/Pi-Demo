@@ -1,43 +1,6 @@
 import mvsdk
-import numpy as np
-import cv2
-from tflite_runtime.interpreter import Interpreter
-from tflite_runtime.interpreter import load_delegate
-from threading import Thread
-
-import platform
-import os
-
-from pygame import mixer
-import time
-# import winsound
-# from tflite_runtime.interpreter import Interpreter
-
-
-def set_input_tensor(interpreter, image):
-    """Sets the input tensor."""
-    input_details = interpreter.get_input_details()[0]
-    tensor_index = input_details['index']
-    input_tensor = interpreter.tensor(tensor_index)()[0]
-    scale, zero_point = input_details['quantization']
-    input_tensor[:, :] = np.uint8(image / scale + zero_point)
-
-
-def get_output_tensor(interpreter, index):
-    """Returns the output tensor at the given index."""
-    output_details = interpreter.get_output_details()[index]
-    tensor = np.squeeze(interpreter.get_tensor(output_details['index']))
-    return tensor
-
-def classify(interpreter, image):
-    output_details = interpreter.get_output_details()
-    set_input_tensor(interpreter, image)
-    interpreter.invoke()
-    scale, zero_point = output_details[0]['quantization']
-    output = get_output_tensor(interpreter, 0)
-    output = scale * (output - zero_point)
-    top_1 = np.argmax(output)
-    return top_1
+from helper import *
+from led import *
 
 def main():
     
