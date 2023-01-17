@@ -3,6 +3,7 @@ from helper import *
 from led import *
 from cv_grab2 import *
 import pygame
+from setting import *
 
 app = Flask(__name__)
  
