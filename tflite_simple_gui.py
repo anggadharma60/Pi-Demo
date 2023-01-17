@@ -2,9 +2,9 @@ from helper import *
 from led import *
 def main():
     
-    data_folder = "models/"
-    model1 = data_folder + "MobileNetV2_V2.tflite"
-    model2 = data_folder + "MobileNetV2_V2_edgetpu.tflite"
+    data_folder = "models/tm/aug/"
+    model1 = data_folder + "model.tflite"
+    model2 = data_folder + "model_edgetpu.tflite"
     list_model=[model1, model2]
     interpreter = load_interpreter(list_model)
 
